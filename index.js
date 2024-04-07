@@ -1,6 +1,7 @@
 import express from "express";
 import mongoose from "mongoose";
 import { accountRouter } from "./accounts/routes/accountRoutes.js";
+import { propertyRouter } from './properties/routes/propertyRoutes.js';
 
 import dotenv from 'dotenv';
 dotenv.config();
@@ -41,4 +42,4 @@ mongoose.connect(process.env.MONGO_URL, { useNewUrlParser: true, useUnifiedTopol
 
 
 
-app.use(accountRouter);
+app.use(accountRouter, propertyRouter);
