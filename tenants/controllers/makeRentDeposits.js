@@ -17,7 +17,7 @@ export const generateToken = async (req, res, next) => {
     }
     ).then((response) => {
         // console.log(data.data.access_token);
-        token = response.data.access_token;
+        const token = response.data.access_token;
         console.log(token);
         next();
     }).catch((err) => {
