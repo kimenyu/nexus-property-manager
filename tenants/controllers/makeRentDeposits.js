@@ -40,6 +40,7 @@ export const makeRentDeposits = async (req, res) => {
 
     const password = new Buffer.from(process.env.BUSINESS_SHORT_CODE + process.env.PASS_KEY + timestamp).toString('base64');
 
+    const token = req.token;
 
     await axios.post (
         "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
