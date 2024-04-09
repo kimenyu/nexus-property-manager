@@ -8,6 +8,7 @@ const tenantSchema = new mongoose.Schema({
     phone: { type: String, required: true },
     role: { type: String, default: 'Tenant' },
     apartment: { type: mongoose.Schema.Types.ObjectId, ref: 'Apartment', default: null },
+    transactions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Transaction' }],
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
     isVerified: { type: Boolean, default: false },
