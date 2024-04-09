@@ -26,8 +26,10 @@ export const generateToken = async (req, res, next) => {
 }
 
 export const makeRentDeposits = async (req, res) => {
-    const { tenantId, amount } = req.body;
-    const tenant = await Tenant.findById(tenantId);
+    const tenant = req.tenant;
+    
+    const { amount } = req.body;
+    
     const date = new Date();
 
     const timestamp = 
