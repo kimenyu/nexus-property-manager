@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import Tenant from '../models/tenantsModel.js'
+import Tenant from '../models/tenantModel.js';
 
 const jwt_secret = process.env.JWT_SECRET;
 
