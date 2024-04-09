@@ -51,7 +51,7 @@ export const makeRentDeposits = async (req, res) => {
             Amount: amount,
             PartyA: tenant.phone, // Use the tenant's phone number here
             PartyB: process.env.BUSINESS_SHORT_CODE,
-            PhoneNumber: phone,
+            PhoneNumber: tenant.phone,
             CallBackURL: 'https://nexus-property-manager.onrender.com/api/tenant/mpesa/callback',
             AccountReference: "Moja Nexus",
             TransactionDesc: "Paid online",
