@@ -3,7 +3,9 @@ import mongoose from "mongoose";
 import { accountRouter } from "./accounts/routes/accountRoutes.js";
 import { propertyRouter } from './properties/routes/propertyRoutes.js';
 import { apartmentRouter } from './apartments/routes/apartmentRoutes.js';
-import { tenantRouter } from './tenants/routes/tenantRoutes.js';
+import { mpesaRouter } from './tenants/controllers/makeRentDeposits.js';
+
+
 
 import dotenv from 'dotenv';
 dotenv.config();
@@ -44,4 +46,4 @@ mongoose.connect(process.env.MONGO_URL, { useNewUrlParser: true, useUnifiedTopol
 
 
 
-app.use(accountRouter, propertyRouter, apartmentRouter, tenantRouter);
+app.use(accountRouter, propertyRouter, apartmentRouter, mpesaRouter);

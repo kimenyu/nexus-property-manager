@@ -6,8 +6,12 @@ import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import nodemailer from 'nodemailer';
 dotenv.config();
+import { Router } from 'express';
 
-export const generateToken = async (req, res, next) => {
+export const mpesaRouter = Router();
+
+
+const generateToken = async (req, res, next) => {
     const auth = new Buffer.from(`${process.env.SAFARICOM_CONSUMER_KEY}:${process.env.SAFARICOM_CONSUMER_SECRET}`).toString('base64');
 
     await axios.get("https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials", {
@@ -25,7 +29,7 @@ export const generateToken = async (req, res, next) => {
     })
 }
 
-export const makeRentDeposits = async (req, res) => {
+mpesaRouter.post('/api/tenant/stk/deposit', generateToken,  async (req, res) => {
     const { tenantId, amount } = req.body;
     const tenant = await Tenant.findById(tenantId);
     const date = new Date();
@@ -39,8 +43,6 @@ export const makeRentDeposits = async (req, res) => {
     ("0" + date.getSeconds()).slice(-2);
 
     const password = new Buffer.from(process.env.BUSINESS_SHORT_CODE + process.env.PASS_KEY + timestamp).toString('base64');
-
-    const token = req.token;
 
     await axios.post (
         "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
@@ -68,9 +70,9 @@ export const makeRentDeposits = async (req, res) => {
     }).catch((err) => {
         console.log(err.message);
     })
-}
+})
 
-export const mpesaCallback = async (req, res) => {
+mpesaRouter.post('/api/tenant/mpesa/callback', async (req, res) => {
     const callbackData = req.body;
   
     // Log the callback data to the console
@@ -110,4 +112,4 @@ export const mpesaCallback = async (req, res) => {
     }
 
     return res.json('ok');
-}
+})
