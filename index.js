@@ -118,46 +118,55 @@ app.post("/stk", generateToken, async (req, res) => {
   });
   
 
-app.post('/callback', async(req, res) => {
+app.post('/callback', async (req, res) => {
   const callbackData = req.body;
 
   // Log the callback data to the console
   console.log(callbackData.Body);
 
-  if(!callbackData.Body.stkCallback.CallbackMetadata) {
-      console.log(callbackData.Body);
-      return res.json('ok');
+  if (!callbackData.Body.stkCallback.CallbackMetadata) {
+    console.log(callbackData.Body);
+    return res.json('ok');
   }
 
   console.log(callbackData.Body.stkCallback.CallbackMetadata);
 
   const newTransaction = new Transaction({
-      MpesaReceiptNumber: callbackData.Body.stkCallback.CallbackMetadata.Item[1].Value,
-      amount: callbackData.Body.stkCallback.CallbackMetadata.Item[0].Value,
-      TransactionDate: callbackData.Body.stkCallback.CallbackMetadata.Item[3].Value,
-      MerchantRequestID: callbackData.Body.stkCallback.MerchantRequestID,
-      CheckoutRequestID: callbackData.Body.stkCallback.CheckoutRequestID,
-      ResultCode: callbackData.Body.stkCallback.ResultCode,
-      ResultDesc: callbackData.Body.stkCallback.ResultDesc,
-      PhoneNumber: callbackData.Body.stkCallback.CallbackMetadata.Item[4].Value,
-      type: 'deposit',
-      status: 'completed',
+    MpesaReceiptNumber: callbackData.Body.stkCallback.CallbackMetadata.Item[1]?.Value,
+    amount: callbackData.Body.stkCallback.CallbackMetadata.Item[0]?.Value,
+    TransactionDate: callbackData.Body.stkCallback.CallbackMetadata.Item[3]?.Value,
+    MerchantRequestID: callbackData.Body.stkCallback.MerchantRequestID,
+    CheckoutRequestID: callbackData.Body.stkCallback.CheckoutRequestID,
+    ResultCode: callbackData.Body.stkCallback.ResultCode,
+    ResultDesc: callbackData.Body.stkCallback.ResultDesc,
+    PhoneNumber: callbackData.Body.stkCallback.CallbackMetadata.Item[4]?.Value,
+    type: 'deposit',
+    status: 'completed',
   });
 
-  if (callbackData.Body.stkCallback.CallbackMetadata.Item[0].Value < 0 || callbackData.Body.stkCallback.ResultCode !== 0 || callbackData.Body.stkCallback.ResultDesc !== 'The service request is processed successfully.') {
-      newTransaction.status = 'failed';
+  if (
+    callbackData.Body.stkCallback.CallbackMetadata.Item[0]?.Value < 0 ||
+    callbackData.Body.stkCallback.ResultCode !== 0 ||
+    callbackData.Body.stkCallback.ResultDesc !== 'The service request is processed successfully.'
+  ) {
+    newTransaction.status = 'failed';
   }
 
-  await newTransaction.save();
+  try {
+    await newTransaction.save();
 
-  const tenant = await Tenant.findOne({ phone: callbackData.Body.stkCallback.CallbackMetadata.Item[4].Value });
+    const tenant = await Tenant.findOne({ phone: callbackData.Body.stkCallback.CallbackMetadata.Item[4]?.Value });
 
-  if (tenant) {
+    if (tenant) {
       tenant.transactions.push(newTransaction._id);
       await tenant.save();
-  }
+    }
 
-  return res.json('ok');
-})
+    return res.json('ok');
+  } catch (error) {
+    console.error('Error saving transaction:', error);
+    return res.status(500).json({ message: 'Error saving transaction' });
+  }
+});
 
 app.use(accountRouter, propertyRouter, apartmentRouter);
