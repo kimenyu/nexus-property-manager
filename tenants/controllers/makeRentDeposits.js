@@ -10,7 +10,6 @@ import { Router } from 'express';
 
 export const mpesaRouter = Router();
 
-let globalToken;
 
 const generateToken = async (req, res, next) => {
     const auth = new Buffer.from(`${process.env.SAFARICOM_CONSUMER_KEY}:${process.env.SAFARICOM_CONSUMER_SECRET}`).toString('base64');
@@ -22,8 +21,8 @@ const generateToken = async (req, res, next) => {
     }
     ).then((response) => {
         // console.log(data.data.access_token);
-        globalToken = response.data.access_token; // Store the token in the global variable
-        console.log(globalToken);
+        token = response.data.access_token;
+        console.log(token);
         next();
     }).catch((err) => {
         console.log(err);
@@ -53,9 +52,9 @@ mpesaRouter.post("/stk", generateToken, async(req, res) => {
             Timestamp: timestamp,
             TransactionType: "CustomerPayBillOnline",
             Amount: amount,
-            PartyA: tenant.phone, // Use the tenant's phone number here
+            PartyA: tenant.phone.slice(1), // Use the tenant's phone number here
             PartyB: process.env.BUSINESS_SHORT_CODE,
-            PhoneNumber: tenant.phone,
+            PhoneNumber: tenant.phone.slice(1),
             CallBackURL: 'https://nexus-property-manager.onrender.com/callback',
             AccountReference: "Moja Nexus",
             TransactionDesc: "Paid online",
@@ -63,7 +62,7 @@ mpesaRouter.post("/stk", generateToken, async(req, res) => {
         },
         {
             headers: {
-                Authorization: `Bearer ${globalToken}`,
+                Authorization: `Bearer ${token}`,
             },
         }
     ).then ((data) => {
