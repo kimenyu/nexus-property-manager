@@ -10,6 +10,7 @@ import { Router } from 'express';
 
 export const mpesaRouter = Router();
 
+let globalToken;
 
 const generateToken = async (req, res, next) => {
     const auth = new Buffer.from(`${process.env.SAFARICOM_CONSUMER_KEY}:${process.env.SAFARICOM_CONSUMER_SECRET}`).toString('base64');
@@ -21,15 +22,15 @@ const generateToken = async (req, res, next) => {
     }
     ).then((response) => {
         // console.log(data.data.access_token);
-        const token = response.data.access_token;
-        console.log(token);
+        globalToken = response.data.access_token; // Store the token in the global variable
+        console.log(globalToken);
         next();
     }).catch((err) => {
         console.log(err);
     })
 }
 
-mpesaRouter.post('/api/tenant/stk/deposit', generateToken,  async (req, res) => {
+mpesaRouter.post("/stk", generateToken, async(req, res) => {
     const { tenantId, amount } = req.body;
     const tenant = await Tenant.findById(tenantId);
     const date = new Date();
@@ -55,14 +56,14 @@ mpesaRouter.post('/api/tenant/stk/deposit', generateToken,  async (req, res) => 
             PartyA: tenant.phone, // Use the tenant's phone number here
             PartyB: process.env.BUSINESS_SHORT_CODE,
             PhoneNumber: tenant.phone,
-            CallBackURL: 'https://nexus-property-manager.onrender.com/api/tenant/mpesa/callback',
+            CallBackURL: 'https://nexus-property-manager.onrender.com/callback',
             AccountReference: "Moja Nexus",
             TransactionDesc: "Paid online",
 
         },
         {
             headers: {
-                Authorization: `Bearer ${token}`,
+                Authorization: `Bearer ${globalToken}`,
             },
         }
     ).then ((data) => {
@@ -72,7 +73,7 @@ mpesaRouter.post('/api/tenant/stk/deposit', generateToken,  async (req, res) => 
     })
 })
 
-mpesaRouter.post('/api/tenant/mpesa/callback', async (req, res) => {
+mpesaRouter.post('/callback', async(req, res) => {
     const callbackData = req.body;
   
     // Log the callback data to the console
