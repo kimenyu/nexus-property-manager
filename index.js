@@ -45,6 +45,7 @@ mongoose.connect(process.env.MONGO_URL, { useNewUrlParser: true, useUnifiedTopol
         console.error("Error connecting to MongoDB:", err);
     });
 
+let token;
 
 const generateToken = async (req, res, next) => {
   const auth = new Buffer.from(`${process.env.SAFARICOM_CONSUMER_KEY}:${process.env.SAFARICOM_CONSUMER_SECRET}`).toString('base64');
@@ -64,48 +65,58 @@ const generateToken = async (req, res, next) => {
   })
 }
 
-app.post("/stk", generateToken, async(req, res) => {
-  const { tenantId, amount } = req.body;
-  const tenant = await Tenant.findById(tenantId);
-  const date = new Date();
-
-  const timestamp = 
-  date.getFullYear().toString() +
-  ("0" + (date.getMonth() + 1)).slice(-2) +
-  ("0" + date.getDate()).slice(-2) +
-  ("0" + date.getHours()).slice(-2) +
-  ("0" + date.getMinutes()).slice(-2) +
-  ("0" + date.getSeconds()).slice(-2);
-
-  const password = new Buffer.from(process.env.BUSINESS_SHORT_CODE + process.env.PASS_KEY + timestamp).toString('base64');
-
-  await axios.post (
-      "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
-      {
+app.post("/stk", generateToken, async (req, res) => {
+    const { tenantId, amount } = req.body;
+  
+    try {
+      const tenant = await Tenant.findById(tenantId);
+      if (!tenant) {
+        return res.status(404).json({ message: 'Tenant not found' });
+      }
+  
+      const date = new Date();
+      const timestamp =
+        date.getFullYear().toString() +
+        ("0" + (date.getMonth() + 1)).slice(-2) +
+        ("0" + date.getDate()).slice(-2) +
+        ("0" + date.getHours()).slice(-2) +
+        ("0" + date.getMinutes()).slice(-2) +
+        ("0" + date.getSeconds()).slice(-2);
+  
+      const password = new Buffer.from(process.env.BUSINESS_SHORT_CODE + process.env.PASS_KEY + timestamp).toString('base64');
+  
+      await axios.post(
+        "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
+        {
           BusinessShortCode: process.env.BUSINESS_SHORT_CODE,
           Password: password,
           Timestamp: timestamp,
           TransactionType: "CustomerPayBillOnline",
           Amount: amount,
-          PartyA: tenant.phone.slice(1), // Use the tenant's phone number here
+          PartyA: tenant?.phone?.slice(1), // Use optional chaining to safely access properties
           PartyB: process.env.BUSINESS_SHORT_CODE,
-          PhoneNumber: tenant.phone.slice(1),
+          PhoneNumber: tenant?.phone?.slice(1),
           CallBackURL: 'https://nexus-property-manager.onrender.com/callback',
           AccountReference: "Moja Nexus",
           TransactionDesc: "Paid online",
-
-      },
-      {
+        },
+        {
           headers: {
-              Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
-      }
-  ).then ((data) => {
-      res.status(200).json(data.data);
-  }).catch((err) => {
-      console.log(err.message);
-  })
-})
+        }
+      ).then((data) => {
+        res.status(200).json(data.data);
+      }).catch((err) => {
+        console.log(err.message);
+        res.status(500).json({ message: 'Internal server error' });
+      });
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+  
 
 app.post('/callback', async(req, res) => {
   const callbackData = req.body;
