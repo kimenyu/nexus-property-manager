@@ -227,7 +227,7 @@ app.post('/callback', async (req, res) => {
         CheckoutRequestID: callbackData.Body.stkCallback.CheckoutRequestID,
         ResultCode: callbackData.Body.stkCallback.ResultCode,
         ResultDesc: callbackData.Body.stkCallback.ResultDesc,
-        PhoneNumber: callbackData.Body.stkCallback.CallbackMetadata.Item[3]?.Value,
+        phone: callbackData.Body.stkCallback.CallbackMetadata.Item[3]?.Value,
         type: 'deposit',
         status: 'completed',
     });

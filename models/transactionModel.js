@@ -10,7 +10,7 @@ const transactionSchema = new mongoose.Schema({
     Amount: String,
     MpesaReceiptNumber: String,
     TransactionDate: Date,
-    PhoneNumber: String,
+    phone: String,
     type: { type: String, enum: transactionType, required: true },
     status: { type: String, default: 'pending' }
 });
