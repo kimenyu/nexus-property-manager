@@ -6,7 +6,7 @@ const tenantSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     phone: { type: String, required: true },
-    role: { type: String, default: 'Tenant' },
+    role: { type: String, default: 'tenant' },
     apartment: { type: mongoose.Schema.Types.ObjectId, ref: 'Apartment', default: null },
     transactions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Transaction' }],
     createdAt: { type: Date, default: Date.now },

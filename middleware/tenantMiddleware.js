@@ -14,7 +14,7 @@ export const authenticateTenant = async (req, res, next) => {
         const decoded = jwt.verify(token, jwt_secret);
         const tenant = await Tenant.findById(decoded.id);
 
-        if (!tenant || tenant.role !== 'Tenant') {
+        if (!tenant || tenant.role !== 'tenant') {
             return res.status(401).json({ message: 'Access denied, invalid token' });
         }
 
