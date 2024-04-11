@@ -117,6 +117,95 @@ app.post("/stk", generateToken, async (req, res) => {
     }
 });  
 
+// app.post('/callback', async (req, res) => {
+//     const callbackData = req.body;
+
+//     // Log the callback data to the console
+//     console.log(callbackData.Body);
+
+//     if (!callbackData.Body.stkCallback.CallbackMetadata) {
+//         console.log(callbackData.Body);
+//         return res.json('ok');
+//     }
+
+//     console.log(callbackData.Body.stkCallback.CallbackMetadata);
+
+//     const newTransaction = new Transaction({
+//         MpesaReceiptNumber: callbackData.Body.stkCallback.CallbackMetadata.Item[1]?.Value,
+//         amount: callbackData.Body.stkCallback.CallbackMetadata.Item[0]?.Value,
+//         TransactionDate: callbackData.Body.stkCallback.CallbackMetadata.Item[3]?.Value,
+//         MerchantRequestID: callbackData.Body.stkCallback.MerchantRequestID,
+//         CheckoutRequestID: callbackData.Body.stkCallback.CheckoutRequestID,
+//         ResultCode: callbackData.Body.stkCallback.ResultCode,
+//         ResultDesc: callbackData.Body.stkCallback.ResultDesc,
+//         PhoneNumber: callbackData.Body.stkCallback.CallbackMetadata.Item[4]?.Value,
+//         type: 'deposit',
+//         status: 'completed',
+//     });
+
+//     if (
+//         callbackData.Body.stkCallback.CallbackMetadata.Item[0]?.Value < 0 ||
+//         callbackData.Body.stkCallback.ResultCode !== 0 ||
+//         callbackData.Body.stkCallback.ResultDesc !== 'The service request is processed successfully.'
+//     ) {
+//         newTransaction.status = 'failed';
+//     }
+
+//     const session = await mongoose.startSession();
+//     session.startTransaction();
+
+//     try {
+//         // Save the new transaction
+//         await newTransaction.save();
+
+//         // Find the tenant by original phone number (including country code)
+//         const originalPhoneNumber = `+${callbackData.Body.stkCallback.CallbackMetadata.Item[4]?.Value}`;
+//         console.log('Original Phone Number:', originalPhoneNumber);
+
+//         // Log the actual MongoDB query being executed
+//         const query = { phone: originalPhoneNumber };
+//         console.log('MongoDB Query:', query);
+
+//         // Check the count of all tenants in the database
+//         const allTenantsCount = await Tenant.countDocuments({});
+//         console.log('Total Tenants Count:', allTenantsCount);
+
+//         const tenant = await Tenant.findOne(query).session(session);
+
+//         // Log the found tenant
+//         console.log('Found tenant:', tenant);
+
+//         if (tenant) {
+//             // Push the new transaction ID into the tenant's transactions array
+//             tenant.transactions.push(newTransaction._id);
+
+//             // Save the updated tenant
+//             const updatedTenant = await tenant.save({ session });
+
+//             // Log the updated tenant
+//             console.log('Updated tenant:', updatedTenant);
+
+//             await session.commitTransaction();
+//             session.endSession();
+
+//             return res.json('ok');
+//         } else {
+//             console.log('Tenant not found');
+//             await session.abortTransaction();
+//             session.endSession();
+
+//             return res.status(404).json({ message: 'Tenant not found' });
+//         }
+//     } catch (error) {
+//         console.error('Error finding or updating tenant:', error);
+//         await session.abortTransaction();
+//         session.endSession();
+
+//         return res.status(500).json({ message: 'Error finding or updating tenant' });
+//     }
+
+// });
+
 app.post('/callback', async (req, res) => {
     const callbackData = req.body;
 
@@ -155,9 +244,12 @@ app.post('/callback', async (req, res) => {
         // Save the new transaction
         await newTransaction.save();
 
-        // Find the tenant by original phone number (including country code)
-        const originalPhoneNumber = `+${callbackData.Body.stkCallback.CallbackMetadata.Item[4]?.Value}`;
-        const tenant = await Tenant.findOne({ phone: originalPhoneNumber });
+        // Construct the phone number with the country code
+        const phoneNumberWithCode = `+${callbackData.Body.stkCallback.CallbackMetadata.Item[4]?.Value}`;
+        console.log('Phone Number with Code:', phoneNumberWithCode);
+
+        // Find the tenant by phone number (including country code)
+        const tenant = await Tenant.findOne({ phone: phoneNumberWithCode });
 
         // Log the found tenant
         console.log('Found tenant:', tenant);
@@ -167,10 +259,10 @@ app.post('/callback', async (req, res) => {
             tenant.transactions.push(newTransaction._id);
 
             // Save the updated tenant
-            const updatedTenant = await tenant.save();
+            await tenant.save();
 
             // Log the updated tenant
-            console.log('Updated tenant:', updatedTenant);
+            console.log('Updated tenant:', tenant);
 
             return res.json('ok');
         } else {
