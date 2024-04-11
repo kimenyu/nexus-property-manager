@@ -222,12 +222,12 @@ app.post('/callback', async (req, res) => {
     const newTransaction = new Transaction({
         MpesaReceiptNumber: callbackData.Body.stkCallback.CallbackMetadata.Item[1]?.Value,
         amount: callbackData.Body.stkCallback.CallbackMetadata.Item[0]?.Value,
-        TransactionDate: callbackData.Body.stkCallback.CallbackMetadata.Item[3]?.Value,
+        TransactionDate: callbackData.Body.stkCallback.CallbackMetadata.Item[2]?.Value,
         MerchantRequestID: callbackData.Body.stkCallback.MerchantRequestID,
         CheckoutRequestID: callbackData.Body.stkCallback.CheckoutRequestID,
         ResultCode: callbackData.Body.stkCallback.ResultCode,
         ResultDesc: callbackData.Body.stkCallback.ResultDesc,
-        PhoneNumber: callbackData.Body.stkCallback.CallbackMetadata.Item[4]?.Value,
+        PhoneNumber: callbackData.Body.stkCallback.CallbackMetadata.Item[3]?.Value,
         type: 'deposit',
         status: 'completed',
     });
@@ -245,7 +245,7 @@ app.post('/callback', async (req, res) => {
         await newTransaction.save();
 
         // Construct the phone number with the country code
-        const phoneNumberWithCode = `+${callbackData.Body.stkCallback.CallbackMetadata.Item[4]?.Value}`;
+        const phoneNumberWithCode = `+${callbackData.Body.stkCallback.CallbackMetadata.Item[3]?.Value}`;
         console.log('Phone Number with Code:', phoneNumberWithCode);
 
         // Find the tenant by phone number (including country code)
