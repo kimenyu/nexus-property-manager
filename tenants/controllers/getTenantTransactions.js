@@ -21,3 +21,15 @@ export const getUserTransaction = async (req, res) => {
     return res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+//get all transactions
+export const getAllTransactions = async (req, res) => {
+  try {
+    const transactions = await Transaction.find({});
+
+    res.json({ transactions });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+}
