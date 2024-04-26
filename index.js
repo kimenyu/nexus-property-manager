@@ -151,7 +151,7 @@ app.post('/callback', async (req, res) => {
 
     const newTransaction = new Transaction({
         MpesaReceiptNumber: callbackData.Body.stkCallback.CallbackMetadata.Item.find(item => item.Name === 'MpesaReceiptNumber')?.Value,
-        Amount: callbackData.Body.stkCallback.CallbackMetadata.Item.find(item => item.Name === 'Amount')?.Value,
+        Amount: parseFloat(callbackData.Body.stkCallback.CallbackMetadata.Item.find(item => item.Name === 'Amount')?.Value),
         TransactionDate: transactionDate, // Use parsed TransactionDate value
         MerchantRequestID: callbackData.Body.stkCallback.MerchantRequestID,
         CheckoutRequestID: callbackData.Body.stkCallback.CheckoutRequestID,
