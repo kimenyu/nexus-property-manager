@@ -25,7 +25,7 @@ export const assignApartment = async (req, res) => {
             return res.status(400).json({ error: 'Tenant already has an apartment' });
         }
 
-        const latestTransaction = mytenantWithTransactions[0];
+        const latestTransaction = mytenantWithTransactions.transactions[-1];
         console.log('-------------------------------');
         console.log(latestTransaction);
         console.log('-------------------------------');
