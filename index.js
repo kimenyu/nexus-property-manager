@@ -131,23 +131,40 @@ app.post('/callback', async (req, res) => {
 
     console.log(callbackData.Body.stkCallback.CallbackMetadata);
 
+    // Extract TransactionDate from CallbackMetadata Item array
+    const transactionDateItem = callbackData.Body.stkCallback.CallbackMetadata.Item.find(item => item.Name === 'TransactionDate');
+
+    let transactionDate;
+    if (transactionDateItem) {
+        // Parse the TransactionDate value to a Date object
+        transactionDate = new Date(transactionDateItem.Value);
+    } else {
+        console.error('TransactionDate not found in callback data.');
+        return res.status(400).json({ message: 'TransactionDate not found in callback data' });
+    }
+
+    // Ensure transactionDate is a valid Date object
+    if (isNaN(transactionDate.getTime())) {
+        console.error('Invalid TransactionDate value:', transactionDateItem.Value);
+        return res.status(400).json({ message: 'Invalid TransactionDate value' });
+    }
+
     const newTransaction = new Transaction({
-        MpesaReceiptNumber: callbackData.Body.stkCallback.CallbackMetadata.Item[1]?.Value,
-        amount: callbackData.Body.stkCallback.CallbackMetadata.Item[0]?.Value,
-        TransactionDate: callbackData.Body.stkCallback.CallbackMetadata.Item[2]?.Value,
+        MpesaReceiptNumber: callbackData.Body.stkCallback.CallbackMetadata.Item.find(item => item.Name === 'MpesaReceiptNumber')?.Value,
+        amount: callbackData.Body.stkCallback.CallbackMetadata.Item.find(item => item.Name === 'Amount')?.Value,
+        TransactionDate: transactionDate, // Use parsed TransactionDate value
         MerchantRequestID: callbackData.Body.stkCallback.MerchantRequestID,
         CheckoutRequestID: callbackData.Body.stkCallback.CheckoutRequestID,
         ResultCode: callbackData.Body.stkCallback.ResultCode,
         ResultDesc: callbackData.Body.stkCallback.ResultDesc,
-        phone: callbackData.Body.stkCallback.CallbackMetadata.Item[3]?.Value,
+        phone: callbackData.Body.stkCallback.CallbackMetadata.Item.find(item => item.Name === 'PhoneNumber')?.Value,
         type: 'deposit',
         status: 'completed',
     });
+ 
 
     if (
-        callbackData.Body.stkCallback.CallbackMetadata.Item[0]?.Value < 0 ||
-        callbackData.Body.stkCallback.ResultCode !== 0 ||
-        callbackData.Body.stkCallback.ResultDesc !== 'The service request is processed successfully.'
+        callbackData.Body.stkCallback.ResultCode !== 0
     ) {
         newTransaction.status = 'failed';
     }
@@ -157,7 +174,7 @@ app.post('/callback', async (req, res) => {
         await newTransaction.save();
 
         // Construct the phone number with the country code
-        const phoneNumberWithCode = `+${callbackData.Body.stkCallback.CallbackMetadata.Item[3]?.Value}`;
+        const phoneNumberWithCode = `+${callbackData.Body.stkCallback.CallbackMetadata.Item.find(item => item.Name === 'PhoneNumber')?.Value}`;
         console.log('Phone Number with Code:', phoneNumberWithCode);
 
         // Find the tenant by phone number (including country code)

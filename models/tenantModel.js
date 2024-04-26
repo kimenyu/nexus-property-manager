@@ -13,7 +13,6 @@ const tenantSchema = new mongoose.Schema({
     updatedAt: { type: Date, default: Date.now },
     isVerified: { type: Boolean, default: false },
     verificationCode: { type: String },
-    transactions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Transaction' }],
 });
 
 const Tenant = mongoose.model('Tenant', tenantSchema);

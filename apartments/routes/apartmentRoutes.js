@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { createApartment, getAllApartments, getApartmentById, updateApartment, deleteApartment } from '../controllers/apartmentControllers.js';
+import { assignApartment } from '../controllers/assignApartmentController.js';
 import { authenticateOwner } from '../../middleware/ownerMiddleware.js';
+import { authenticateTenant } from '../../middleware/tenantMiddleware.js';
 
 export const apartmentRouter = Router();
 
@@ -19,3 +21,4 @@ apartmentRouter.put('/api/apartment/update/:id', authenticateOwner, updateApartm
 // Delete Apartment (Only accessible by authenticated owners)
 apartmentRouter.delete('/api/apartment/delete/:id', authenticateOwner, deleteApartment);
 
+apartmentRouter.post('/api/apartment/assign', authenticateTenant, assignApartment);

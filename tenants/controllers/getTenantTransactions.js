@@ -6,7 +6,7 @@ export const getUserTransaction = async (req, res) => {
 
   try {
     const mytenantWithTransactions = await Tenant.findById(mytenant._id).populate('transactions'); // Populate transactions with actual documents
-
+    console.log(mytenantWithTransactions);
     if (!mytenantWithTransactions) {
       return res.status(404).json({ error: 'Tenant not found' });
     }
