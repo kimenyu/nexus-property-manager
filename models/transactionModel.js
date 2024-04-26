@@ -12,7 +12,8 @@ const transactionSchema = new mongoose.Schema({
     TransactionDate: Date,
     phone: String,
     type: { type: String, enum: transactionType, required: true },
-    status: { type: String, default: 'pending' }
+    status: { type: String, default: 'pending' },
+    createdAt: { type: Date, default: Date.now },
 });
 
 const Transaction = mongoose.model('Transaction', transactionSchema);

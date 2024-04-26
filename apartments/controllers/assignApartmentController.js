@@ -9,7 +9,9 @@ export const assignApartment = async (req, res) => {
     
     try {
         const apartment = await Apartment.findById(apartmentId);
-        const mytenantWithTransactions = await Tenant.findById(tenant._id).populate('transactions').sort({ createdAt: -1 }).limit(1);
+        const mytenantWithTransactions = await Tenant.findById(tenant._id).populate('transactions').sort({ 'transactions.createdAt': -1 });
+
+        console.log(mytenantWithTransactions);
 
         if (!apartment) {
             return res.status(404).json({ error: 'Apartment not found' });
@@ -23,14 +25,15 @@ export const assignApartment = async (req, res) => {
             return res.status(400).json({ error: 'Tenant already has an apartment' });
         }
 
+        const latestTransaction = mytenantWithTransactions[0];
+        console.log('-------------------------------');
+        console.log(latestTransaction);
+        console.log('-------------------------------');
 
         // Check if there are any transactions for the tenant
         if (!mytenantWithTransactions || mytenantWithTransactions.transactions.length === 0) {
             return res.status(400).json({ error: 'No transactions found for the tenant' });
         }
-
-        // Get the latest transaction
-        const latestTransaction = mytenantWithTransactions.transactions[0];
 
         // Check if the latest transaction meets the conditions
         if (latestTransaction.type !== 'deposit' || latestTransaction.status !== 'completed') {
@@ -38,10 +41,10 @@ export const assignApartment = async (req, res) => {
         }
 
         // Check if the deposit amount is sufficient
-        console.log('latestTransaction.amount:', latestTransaction.amount);
+        console.log('latestTransaction.amount:', latestTransaction.Amount);
         console.log('apartment.deposit:', apartment.deposit);
 
-        if (latestTransaction.amount < apartment.deposit) {
+        if (latestTransaction.Amount < apartment.deposit) {
             return res.status(400).json({ error: 'Tenant has not paid enough deposit' });
         }
 
