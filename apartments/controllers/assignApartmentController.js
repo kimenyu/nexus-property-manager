@@ -40,7 +40,7 @@ export const assignApartment = async (req, res) => {
             return res.status(400).json({ error: 'Tenant must have a completed deposit transaction' });
         }
 
-        // Check if the deposit amount is sufficient
+        // Check if the deposit amount is sufficient for the apartment
         console.log('latestTransaction.amount:', latestTransaction.Amount);
         console.log('apartment.deposit:', apartment.deposit);
 
