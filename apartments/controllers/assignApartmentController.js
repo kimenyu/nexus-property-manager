@@ -55,7 +55,7 @@ export const assignApartment = async (req, res) => {
         }
 
 
-        // Proceed with creating the lease
+        // Proceed with creating the lease and assigning the apartment
         const lease = new Lease({
             tenant: tenant._id,
             apartment: apartment._id,
