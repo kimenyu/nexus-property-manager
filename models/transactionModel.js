@@ -7,7 +7,7 @@ const transactionSchema = new mongoose.Schema({
     CheckoutRequestID: String,
     ResultCode: String,
     ResultDesc: String,
-    Amount: String,
+    Amount: Number,
     MpesaReceiptNumber: String,
     TransactionDate: Date,
     phone: String,
