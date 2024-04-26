@@ -25,15 +25,21 @@ export const assignApartment = async (req, res) => {
             return res.status(400).json({ error: 'Tenant already has an apartment' });
         }
 
-        const latestTransaction = mytenantWithTransactions.transactions[-1];
-        console.log('-------------------------------');
-        console.log(latestTransaction);
-        console.log('-------------------------------');
-
         // Check if there are any transactions for the tenant
         if (!mytenantWithTransactions || mytenantWithTransactions.transactions.length === 0) {
             return res.status(400).json({ error: 'No transactions found for the tenant' });
         }
+
+        const latestTransaction = mytenantWithTransactions.transactions[mytenantWithTransactions.transactions.length - 1];
+        console.log('--------------------------');
+        console.log(latestTransaction);
+        console.log('--------------------------');
+
+        // Check if the latest transaction is defined and meets the conditions
+        if (!latestTransaction || latestTransaction.type !== 'deposit' || latestTransaction.status !== 'completed') {
+            return res.status(400).json({ error: 'Tenant must have a completed deposit transaction' });
+        }
+
 
         // Check if the latest transaction meets the conditions
         if (latestTransaction.type !== 'deposit' || latestTransaction.status !== 'completed') {
