@@ -3,6 +3,7 @@ import { createApartment, getAllApartments, getApartmentById, updateApartment, d
 import { assignApartment } from '../controllers/assignApartmentController.js';
 import { authenticateOwner } from '../../middleware/ownerMiddleware.js';
 import { authenticateTenant } from '../../middleware/tenantMiddleware.js';
+import { getTenantsForApartment } from '../controllers/getApartmentTenants.js';
 
 export const apartmentRouter = Router();
 
@@ -21,4 +22,9 @@ apartmentRouter.put('/api/apartment/update/:id', authenticateOwner, updateApartm
 // Delete Apartment (Only accessible by authenticated owners)
 apartmentRouter.delete('/api/apartment/delete/:id', authenticateOwner, deleteApartment);
 
+
+//assign an apartment
 apartmentRouter.post('/api/apartment/assign', authenticateTenant, assignApartment);
+
+//get tenants for a partcular apartement
+apartmentRouter.get('/api/getTenant/:propertyId', authenticateOwner, getTenantsForApartment)
