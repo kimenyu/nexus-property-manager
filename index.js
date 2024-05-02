@@ -3,6 +3,7 @@ import axios from 'axios';
 import mongoose from "mongoose";
 import Transaction from "./models/transactionModel.js";
 import Tenant from "./models/tenantModel.js";
+import Apartment from "./models/apartmentModel.js";
 import { accountRouter } from "./accounts/routes/accountRoutes.js";
 import { propertyRouter } from './properties/routes/propertyRoutes.js';
 import { apartmentRouter } from './apartments/routes/apartmentRoutes.js';
@@ -68,56 +69,63 @@ const generateToken = async (req, res, next) => {
 
 //leasing and paying deposit
 app.post("/stk", generateToken, async (req, res) => {
-    const { tenantId, amount } = req.body;
-  
-    try {
-      const tenant = await Tenant.findById(tenantId);
-      if (!tenant) {
-        return res.status(404).json({ message: 'Tenant not found' });
-      }
-  
-      const date = new Date();
-      const timestamp =
-        date.getFullYear().toString() +
-        ("0" + (date.getMonth() + 1)).slice(-2) +
-        ("0" + date.getDate()).slice(-2) +
-        ("0" + date.getHours()).slice(-2) +
-        ("0" + date.getMinutes()).slice(-2) +
-        ("0" + date.getSeconds()).slice(-2);
-  
-      const password = new Buffer.from(process.env.BUSINESS_SHORT_CODE + process.env.PASS_KEY + timestamp).toString('base64');
-  
-      await axios.post(
-        "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
-        {
-          BusinessShortCode: process.env.BUSINESS_SHORT_CODE,
-          Password: password,
-          Timestamp: timestamp,
-          TransactionType: "CustomerPayBillOnline",
-          Amount: amount,
-          PartyA: tenant?.phone?.slice(1), // Use optional chaining to safely access properties
-          PartyB: process.env.BUSINESS_SHORT_CODE,
-          PhoneNumber: tenant?.phone?.slice(1),
-          CallBackURL: 'https://nexus-property-manager.onrender.com/callback',
-          AccountReference: "Moja Nexus",
-          TransactionDesc: "Paid online",
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      ).then((data) => {
-        res.status(200).json(data.data);
-      }).catch((err) => {
-        console.log(err.message);
-        res.status(500).json({ message: 'Internal server error' });
-      });
-    } catch (error) {
-      console.log(error);
-      res.status(500).json({ message: 'Internal server error' });
+  const { tenantId, apartmentId } = req.body;
+
+  try {
+    const tenant = await Tenant.findById(tenantId);
+    if (!tenant) {
+      return res.status(404).json({ message: 'Tenant not found' });
     }
-});  
+
+    const apartmentDeposit = await Apartment.findById(apartmentId);
+    if (!apartmentDeposit) {
+      return res.status(404).json({ message: 'Apartment not found' });
+    }
+    const amount = apartmentDeposit.deposit;
+
+    const date = new Date();
+    const timestamp =
+      date.getFullYear().toString() +
+      ("0" + (date.getMonth() + 1)).slice(-2) +
+      ("0" + date.getDate()).slice(-2) +
+      ("0" + date.getHours()).slice(-2) +
+      ("0" + date.getMinutes()).slice(-2) +
+      ("0" + date.getSeconds()).slice(-2);
+
+    const password = new Buffer.from(process.env.BUSINESS_SHORT_CODE + process.env.PASS_KEY + timestamp).toString('base64');
+
+    await axios.post(
+      "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
+      {
+        BusinessShortCode: process.env.BUSINESS_SHORT_CODE,
+        Password: password,
+        Timestamp: timestamp,
+        TransactionType: "CustomerPayBillOnline",
+        Amount: amount,
+        PartyA: tenant?.phone?.slice(1), // Use optional chaining to safely access properties
+        PartyB: process.env.BUSINESS_SHORT_CODE,
+        PhoneNumber: tenant?.phone?.slice(1),
+        CallBackURL: 'https://nexus-property-manager.onrender.com/callback',
+        AccountReference: "Moja Nexus",
+        TransactionDesc: "Paid online",
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    ).then((data) => {
+      res.status(200).json(data.data);
+    }).catch((err) => {
+      console.log(err); // Log the entire error object for debugging
+      res.status(500).json({ message: 'Failed to make STK push request' });
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+ 
 
 app.post('/callback', async (req, res) => {
     const callbackData = req.body;
@@ -208,13 +216,19 @@ app.post('/callback', async (req, res) => {
 
 //paying rents
 app.post("/stk/payrent", generateToken, async (req, res) => {
-  const { tenantId, amount } = req.body;
+  const { tenantId, apartmentId } = req.body;
 
   try {
     const tenant = await Tenant.findById(tenantId);
     if (!tenant) {
       return res.status(404).json({ message: 'Tenant not found' });
     }
+
+    const apartmentDeposit = await Apartment.findById(apartmentId);
+    if (!apartmentDeposit) {
+      return res.status(404).json({ message: 'Apartment not found' });
+    }
+    const amount = apartmentDeposit.rent;
 
     const date = new Date();
     const timestamp =
@@ -238,7 +252,7 @@ app.post("/stk/payrent", generateToken, async (req, res) => {
         PartyA: tenant?.phone?.slice(1), // Use optional chaining to safely access properties
         PartyB: process.env.BUSINESS_SHORT_CODE,
         PhoneNumber: tenant?.phone?.slice(1),
-        CallBackURL: 'https://nexus-property-manager.onrender.com/callback/rent',
+        CallBackURL: 'https://nexus-property-manager.onrender.com/callback',
         AccountReference: "Moja Nexus",
         TransactionDesc: "Paid online",
       },
@@ -250,14 +264,15 @@ app.post("/stk/payrent", generateToken, async (req, res) => {
     ).then((data) => {
       res.status(200).json(data.data);
     }).catch((err) => {
-      console.log(err.message);
-      res.status(500).json({ message: 'Internal server error' });
+      console.log(err); // Log the entire error object for debugging
+      res.status(500).json({ message: 'Failed to make STK push request' });
     });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: 'Internal server error' });
   }
-});  
+});
+
 
 app.post('/callback/rent', async (req, res) => {
   const callbackData = req.body;
