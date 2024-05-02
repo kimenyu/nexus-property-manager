@@ -22,6 +22,33 @@ export const getUserTransaction = async (req, res) => {
   }
 };
 
+
+//get tenenant transactions where type is rent
+export const getRentTransactions = async (req, res) => {
+  const mytenant = req.tenant; // Use req.tenant directly
+
+  try {
+    const mytenantWithRentTransactions = await Tenant.findById(mytenant._id).populate({
+      path: 'transactions',
+      match: { type: 'rent' }, // Match transactions where type is 'rent'
+    });
+
+    if (!mytenantWithRentTransactions) {
+      return res.status(404).json({ error: 'Tenant not found' });
+    }
+
+    // Extract rent transactions from the populated field
+    const rentTransactions = mytenantWithRentTransactions.transactions;
+    
+    // Send the rent transactions array as a JSON response
+    res.json({ rentTransactions });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+
 //get all transactions
 export const getAllTransactions = async (req, res) => {
   try {
