@@ -310,6 +310,8 @@ app.post('/callback/rent', async (req, res) => {
       newTransaction.status = 'failed';
   }
 
+  //comments
+
   try {
       // Save the new transaction
       await newTransaction.save();
