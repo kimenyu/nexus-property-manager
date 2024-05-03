@@ -13,6 +13,7 @@ export const assignApartment = async (req, res) => {
 
         console.log(mytenantWithTransactions);
 
+        //check if apartment exists
         if (!apartment) {
             return res.status(404).json({ error: 'Apartment not found' });
         }
