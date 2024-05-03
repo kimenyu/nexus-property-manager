@@ -15,6 +15,10 @@ const apartmentSchema = new mongoose.Schema({
     image: { type: String, required: true },
     video: { type: String},
     amenities: [{ type: String, required: true }],
+    rentDueDate: { type: Date, default: () => {
+        const now = new Date();
+        return new Date(now.getFullYear(), now.getMonth(), 5);
+    }},
     type: { type: String, enum: apartmentType, required: true },
 });
 
