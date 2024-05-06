@@ -15,10 +15,18 @@ const apartmentSchema = new mongoose.Schema({
     image: { type: String, required: true },
     video: { type: String},
     amenities: [{ type: String, required: true }],
-    rentDueDate: { type: Date, default: () => {
-        const now = new Date();
-        return new Date(now.getFullYear(), now.getMonth(), 5);
-    }},
+    rentDueDate: {
+        type: Date,
+        default: function() {
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+            const targetMonth = (currentMonth + 1) % 12; // Get the next month, considering December
+            const targetYear = currentMonth === 11 ? currentYear + 1 : currentYear; // Increment year if December
+
+            return new Date(targetYear, targetMonth, 5);
+        }
+    },
     type: { type: String, enum: apartmentType, required: true },
 });
 

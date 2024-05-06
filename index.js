@@ -214,7 +214,7 @@ app.post('/callback', async (req, res) => {
 });
 
 
-//paying rents
+//paying rent for tenants
 app.post("/stk/payrent", generateToken, async (req, res) => {
   const { tenantId, apartmentId } = req.body;
 
