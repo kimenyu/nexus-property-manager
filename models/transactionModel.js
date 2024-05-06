@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-const transactionType = ['deposit', 'rent', 'service'];
+const transactionType = ['deposit', 'rent' ];
 
 const transactionSchema = new mongoose.Schema({
     MerchantRequestID: String,
